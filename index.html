@@ -148,6 +148,19 @@
             }
         }
 
+        // --- HTMLエスケープ ---
+        // ポップアップは innerHTML として解釈されるため、
+        // 利用者の入力と Nominatim の応答は必ずここを通す。
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[c]);
+        }
+
         // --- UI関連 ---
         function addInputGroup(value = "", isLast = false, index, totalCount) {
             const div = document.createElement('div');
@@ -240,11 +253,11 @@
                     const latLng = [result.lat, result.lon];
                     
                     // ポップアップの内容作成
-                    let popupContent = `<b>${addr}</b><br>半径${RADIUS_KM}km`;
+                    let popupContent = `<b>${escapeHtml(addr)}</b><br>半径${RADIUS_KM}km`;
                     if (result.isApprox) {
-                        popupContent += `<br><span class="text-xs text-orange-600">※${result.note}</span>`;
+                        popupContent += `<br><span class="text-xs text-orange-600">※${escapeHtml(result.note)}</span>`;
                     }
-                    popupContent += `<br><span class="text-xs text-gray-400">${result.display}</span>`;
+                    popupContent += `<br><span class="text-xs text-gray-400">${escapeHtml(result.display)}</span>`;
 
                     const marker = L.marker(latLng).addTo(map).bindPopup(popupContent);
                     if (result.isApprox) marker.openPopup(); // 補正時は気づくようにポップアップを開く
