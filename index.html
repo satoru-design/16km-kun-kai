@@ -240,11 +240,29 @@
                     const latLng = [result.lat, result.lon];
                     
                     // ポップアップの内容作成
-                    let popupContent = `<b>${addr}</b><br>半径${RADIUS_KM}km`;
+                    // 文字列を bindPopup に渡すと Leaflet が innerHTML として解釈するため、
+                    // DOM要素を組んで textContent で入れる (CVE-2025-69993)
+                    const popupContent = document.createElement('div');
+
+                    const addrEl = document.createElement('b');
+                    addrEl.textContent = addr;
+                    popupContent.appendChild(addrEl);
+                    popupContent.appendChild(document.createElement('br'));
+                    popupContent.appendChild(document.createTextNode(`半径${RADIUS_KM}km`));
+
                     if (result.isApprox) {
-                        popupContent += `<br><span class="text-xs text-orange-600">※${result.note}</span>`;
+                        popupContent.appendChild(document.createElement('br'));
+                        const noteEl = document.createElement('span');
+                        noteEl.className = "text-xs text-orange-600";
+                        noteEl.textContent = `※${result.note}`;
+                        popupContent.appendChild(noteEl);
                     }
-                    popupContent += `<br><span class="text-xs text-gray-400">${result.display}</span>`;
+
+                    popupContent.appendChild(document.createElement('br'));
+                    const displayEl = document.createElement('span');
+                    displayEl.className = "text-xs text-gray-400";
+                    displayEl.textContent = result.display;
+                    popupContent.appendChild(displayEl);
 
                     const marker = L.marker(latLng).addTo(map).bindPopup(popupContent);
                     if (result.isApprox) marker.openPopup(); // 補正時は気づくようにポップアップを開く
